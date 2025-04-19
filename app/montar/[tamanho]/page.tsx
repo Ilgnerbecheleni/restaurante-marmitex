@@ -12,12 +12,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { CartButton } from "@/components/cart-button"
 import { useCart } from "@/components/cart-provider"
+import { useMobile } from "@/hooks/use-mobile"
 
 export default function MontarMarmitexPage({ params }: { params: { tamanho: string } }) {
   const { tamanho } = params
   const router = useRouter()
   const { toast } = useToast()
   const { addToCart } = useCart()
+  const isMobile = useMobile()
 
   const [selectedItems, setSelectedItems] = useState({
     arroz: "",
@@ -189,16 +191,38 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
             </h1>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-[1fr_300px]">
+          <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
             <div>
               <Tabs defaultValue="arroz" className="w-full">
-                <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="arroz">Arroz</TabsTrigger>
-                  <TabsTrigger value="feijao">Feijão</TabsTrigger>
-                  <TabsTrigger value="proteina">Proteínas</TabsTrigger>
-                  <TabsTrigger value="acompanhamento">Acompanhamentos</TabsTrigger>
-                  <TabsTrigger value="salada">Saladas</TabsTrigger>
-                </TabsList>
+                {isMobile ? (
+                  <div className="overflow-x-auto pb-2">
+                    <TabsList className="inline-flex w-auto">
+                      <TabsTrigger value="arroz" className="px-3">
+                        Arroz
+                      </TabsTrigger>
+                      <TabsTrigger value="feijao" className="px-3">
+                        Feijão
+                      </TabsTrigger>
+                      <TabsTrigger value="proteina" className="px-3">
+                        Proteínas
+                      </TabsTrigger>
+                      <TabsTrigger value="acompanhamento" className="px-3">
+                        Acompanhamentos
+                      </TabsTrigger>
+                      <TabsTrigger value="salada" className="px-3">
+                        Saladas
+                      </TabsTrigger>
+                    </TabsList>
+                  </div>
+                ) : (
+                  <TabsList className="grid w-full grid-cols-5">
+                    <TabsTrigger value="arroz">Arroz</TabsTrigger>
+                    <TabsTrigger value="feijao">Feijão</TabsTrigger>
+                    <TabsTrigger value="proteina">Proteínas</TabsTrigger>
+                    <TabsTrigger value="acompanhamento">Acompanhamentos</TabsTrigger>
+                    <TabsTrigger value="salada">Saladas</TabsTrigger>
+                  </TabsList>
+                )}
 
                 <TabsContent value="arroz" className="mt-6">
                   <h2 className="mb-4 text-xl font-semibold">Escolha seu arroz</h2>
@@ -209,10 +233,10 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
                         className={`cursor-pointer transition-all ${isItemSelected("arroz", item) ? "border-red-500 bg-red-50" : ""}`}
                         onClick={() => handleSelectItem("arroz", item)}
                       >
-                        <CardHeader className="p-4">
+                        <CardHeader className="p-3 sm:p-4">
                           <CardTitle className="text-base flex justify-between items-center">
-                            {item}
-                            {isItemSelected("arroz", item) && <Check className="h-5 w-5 text-red-600" />}
+                            <span className="mr-2">{item}</span>
+                            {isItemSelected("arroz", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
                           </CardTitle>
                         </CardHeader>
                       </Card>
@@ -229,10 +253,10 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
                         className={`cursor-pointer transition-all ${isItemSelected("feijao", item) ? "border-red-500 bg-red-50" : ""}`}
                         onClick={() => handleSelectItem("feijao", item)}
                       >
-                        <CardHeader className="p-4">
+                        <CardHeader className="p-3 sm:p-4">
                           <CardTitle className="text-base flex justify-between items-center">
-                            {item}
-                            {isItemSelected("feijao", item) && <Check className="h-5 w-5 text-red-600" />}
+                            <span className="mr-2">{item}</span>
+                            {isItemSelected("feijao", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
                           </CardTitle>
                         </CardHeader>
                       </Card>
@@ -254,10 +278,12 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
                         className={`cursor-pointer transition-all ${isItemSelected("proteina", item) ? "border-red-500 bg-red-50" : ""}`}
                         onClick={() => handleSelectItem("proteina", item)}
                       >
-                        <CardHeader className="p-4">
+                        <CardHeader className="p-3 sm:p-4">
                           <CardTitle className="text-base flex justify-between items-center">
-                            {item}
-                            {isItemSelected("proteina", item) && <Check className="h-5 w-5 text-red-600" />}
+                            <span className="mr-2">{item}</span>
+                            {isItemSelected("proteina", item) && (
+                              <Check className="h-5 w-5 flex-shrink-0 text-red-600" />
+                            )}
                           </CardTitle>
                         </CardHeader>
                       </Card>
@@ -279,10 +305,12 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
                         className={`cursor-pointer transition-all ${isItemSelected("acompanhamento", item) ? "border-red-500 bg-red-50" : ""}`}
                         onClick={() => handleSelectItem("acompanhamento", item)}
                       >
-                        <CardHeader className="p-4">
+                        <CardHeader className="p-3 sm:p-4">
                           <CardTitle className="text-base flex justify-between items-center">
-                            {item}
-                            {isItemSelected("acompanhamento", item) && <Check className="h-5 w-5 text-red-600" />}
+                            <span className="mr-2">{item}</span>
+                            {isItemSelected("acompanhamento", item) && (
+                              <Check className="h-5 w-5 flex-shrink-0 text-red-600" />
+                            )}
                           </CardTitle>
                         </CardHeader>
                       </Card>
@@ -304,10 +332,10 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
                         className={`cursor-pointer transition-all ${isItemSelected("salada", item) ? "border-red-500 bg-red-50" : ""}`}
                         onClick={() => handleSelectItem("salada", item)}
                       >
-                        <CardHeader className="p-4">
+                        <CardHeader className="p-3 sm:p-4">
                           <CardTitle className="text-base flex justify-between items-center">
-                            {item}
-                            {isItemSelected("salada", item) && <Check className="h-5 w-5 text-red-600" />}
+                            <span className="mr-2">{item}</span>
+                            {isItemSelected("salada", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
                           </CardTitle>
                         </CardHeader>
                       </Card>
@@ -318,7 +346,7 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
             </div>
 
             <div>
-              <Card className="sticky top-24">
+              <Card className={`${isMobile ? "mt-6" : "sticky top-24"}`}>
                 <CardHeader>
                   <CardTitle>Resumo do Marmitex</CardTitle>
                   <CardDescription>
