@@ -1,10 +1,8 @@
 "use client"
 
-import type React from "react"
-
-import { useState, useRef } from "react"
+import { useState } from "react"
 import Link from "next/link"
-import { ArrowLeft, Check, ShoppingBag, ChevronUp } from "lucide-react"
+import { ArrowLeft, ShoppingBag } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
@@ -14,6 +12,9 @@ import { useToast } from "@/hooks/use-toast"
 import { CartButton } from "@/components/cart-button"
 import { useCart } from "@/components/cart-provider"
 import { useMobile } from "@/hooks/use-mobile"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 export default function MontarMarmitexPage({ params }: { params: { tamanho: string } }) {
   const { tamanho } = params
@@ -21,22 +22,13 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
   const { toast } = useToast()
   const { addToCart } = useCart()
   const isMobile = useMobile()
-  const [showScrollTop, setShowScrollTop] = useState(false)
-  const [showFloatingResume, setShowFloatingResume] = useState(false)
-
-  // Refs para navegação de seções
-  const arrozRef = useRef<HTMLDivElement>(null)
-  const feijaoRef = useRef<HTMLDivElement>(null)
-  const proteinaRef = useRef<HTMLDivElement>(null)
-  const acompanhamentoRef = useRef<HTMLDivElement>(null)
-  const saladaRef = useRef<HTMLDivElement>(null)
 
   const [selectedItems, setSelectedItems] = useState({
     arroz: "",
     feijao: "",
     proteina: "",
-    acompanhamento: [],
-    salada: [],
+    acompanhamento: [] as string[],
+    salada: [] as string[],
   })
 
   const precos = {
@@ -65,88 +57,30 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
     salada: ["Alface", "Tomate", "Cenoura Ralada", "Beterraba", "Repolho", "Pepino"],
   }
 
-  // Controle de scroll
-  const handleScroll = () => {
-    if (window.scrollY > 300) {
-      setShowScrollTop(true)
-      setShowFloatingResume(true)
+  const handleSelectSingle = (categoria: "arroz" | "feijao" | "proteina", value: string) => {
+    setSelectedItems((prev) => ({ ...prev, [categoria]: value }))
+  }
+
+  const handleToggleMultiple = (categoria: "acompanhamento" | "salada", item: string) => {
+    const limite = limites[tamanho as keyof typeof limites][categoria]
+    const currentItems = [...selectedItems[categoria]]
+
+    if (currentItems.includes(item)) {
+      // Remover item
+      const updatedItems = currentItems.filter((i) => i !== item)
+      setSelectedItems((prev) => ({ ...prev, [categoria]: updatedItems }))
     } else {
-      setShowScrollTop(false)
-      setShowFloatingResume(false)
-    }
-  }
-
-  // Adicionar evento de scroll
-  if (typeof window !== "undefined") {
-    window.addEventListener("scroll", handleScroll)
-  }
-
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" })
-  }
-
-  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
-    if (ref.current) {
-      ref.current.scrollIntoView({ behavior: "smooth", block: "start" })
-    }
-  }
-
-  const handleSelectItem = (categoria: string, item: string) => {
-    if (categoria === "arroz" || categoria === "feijao") {
-      setSelectedItems((prev) => ({ ...prev, [categoria]: item }))
-      return
-    }
-
-    if (categoria === "proteina") {
-      const limite = limites[tamanho as keyof typeof limites].proteina
-      if (selectedItems.proteina === item) {
-        setSelectedItems((prev) => ({ ...prev, proteina: "" }))
+      // Adicionar item se não exceder o limite
+      if (currentItems.length < limite) {
+        setSelectedItems((prev) => ({ ...prev, [categoria]: [...currentItems, item] }))
       } else {
-        const currentItems = selectedItems.proteina ? [selectedItems.proteina] : []
-        if (currentItems.length < limite) {
-          setSelectedItems((prev) => ({ ...prev, proteina: item }))
-        } else {
-          toast({
-            title: "Limite atingido",
-            description: `Você pode escolher apenas ${limite} proteína no marmitex ${tamanhoFormatado[tamanho as keyof typeof tamanhoFormatado]}.`,
-            variant: "destructive",
-          })
-        }
-      }
-      return
-    }
-
-    if (categoria === "acompanhamento" || categoria === "salada") {
-      const limite = limites[tamanho as keyof typeof limites][categoria as "acompanhamento" | "salada"]
-      const currentItems = [...selectedItems[categoria as "acompanhamento" | "salada"]]
-
-      if (currentItems.includes(item)) {
-        const updatedItems = currentItems.filter((i) => i !== item)
-        setSelectedItems((prev) => ({ ...prev, [categoria]: updatedItems }))
-      } else {
-        if (currentItems.length < limite) {
-          setSelectedItems((prev) => ({ ...prev, [categoria]: [...currentItems, item] }))
-        } else {
-          toast({
-            title: "Limite atingido",
-            description: `Você pode escolher apenas ${limite} itens de ${categoria} no marmitex ${tamanhoFormatado[tamanho as keyof typeof tamanhoFormatado]}.`,
-            variant: "destructive",
-          })
-        }
+        toast({
+          title: "Limite atingido",
+          description: `Você pode escolher apenas ${limite} itens de ${categoria === "acompanhamento" ? "acompanhamento" : "salada"} no marmitex ${tamanhoFormatado[tamanho as keyof typeof tamanhoFormatado]}.`,
+          variant: "destructive",
+        })
       }
     }
-  }
-
-  const isItemSelected = (categoria: string, item: string) => {
-    if (categoria === "arroz" || categoria === "feijao") {
-      return selectedItems[categoria as "arroz" | "feijao"] === item
-    }
-
-    if (categoria === "proteina") {
-      return selectedItems.proteina === item
-    }
-
-    return selectedItems[categoria as "acompanhamento" | "salada"].includes(item)
   }
 
   const handleAddToCart = () => {
@@ -157,7 +91,6 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
         description: "Por favor, selecione um tipo de arroz.",
         variant: "destructive",
       })
-      scrollToSection(arrozRef)
       return
     }
 
@@ -167,7 +100,6 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
         description: "Por favor, selecione um tipo de feijão.",
         variant: "destructive",
       })
-      scrollToSection(feijaoRef)
       return
     }
 
@@ -177,7 +109,6 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
         description: "Por favor, selecione pelo menos uma proteína.",
         variant: "destructive",
       })
-      scrollToSection(proteinaRef)
       return
     }
 
@@ -208,7 +139,7 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-40 border-b bg-background">
-        <div className="container flex h-16 items-center justify-between py-4">
+        <div className="w-full px-2 sm:px-4 flex h-16 items-center justify-between py-4 max-w-7xl mx-auto">
           <Link href="/" className="flex items-center gap-2 text-lg font-bold text-red-600">
             <ShoppingBag className="h-6 w-6" />
             <span>Tradição Mineira</span>
@@ -216,8 +147,8 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
           <CartButton />
         </div>
       </header>
-      <main className="flex-1">
-        <div className="container py-6">
+      <main className="flex-1 w-full">
+        <div className="w-full px-2 sm:px-4 py-6 max-w-7xl mx-auto">
           <div className="mb-6 flex items-center gap-2">
             <Button variant="outline" size="icon" asChild>
               <Link href="/">
@@ -225,199 +156,137 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
                 <span className="sr-only">Voltar</span>
               </Link>
             </Button>
-            <h1 className="text-2xl font-bold tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-bold tracking-tight">
               Monte seu Marmitex {tamanhoFormatado[tamanho as keyof typeof tamanhoFormatado]}
             </h1>
           </div>
 
-          {/* Navegação rápida */}
-          <div className="mb-8 overflow-x-auto">
-            <div className="flex space-x-2 pb-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => scrollToSection(arrozRef)}
-                className={selectedItems.arroz ? "border-green-500" : ""}
-              >
-                Arroz {selectedItems.arroz ? "✓" : ""}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => scrollToSection(feijaoRef)}
-                className={selectedItems.feijao ? "border-green-500" : ""}
-              >
-                Feijão {selectedItems.feijao ? "✓" : ""}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => scrollToSection(proteinaRef)}
-                className={selectedItems.proteina ? "border-green-500" : ""}
-              >
-                Proteínas {selectedItems.proteina ? "✓" : ""}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => scrollToSection(acompanhamentoRef)}
-                className={selectedItems.acompanhamento.length > 0 ? "border-green-500" : ""}
-              >
-                Acompanhamentos {selectedItems.acompanhamento.length > 0 ? "✓" : ""}
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => scrollToSection(saladaRef)}
-                className={selectedItems.salada.length > 0 ? "border-green-500" : ""}
-              >
-                Saladas {selectedItems.salada.length > 0 ? "✓" : ""}
-              </Button>
-            </div>
-          </div>
-
           <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
-            <div className="space-y-12">
-              {/* Seção Arroz */}
-              <div ref={arrozRef} className="scroll-mt-24">
-                <h2 className="mb-4 text-xl font-semibold border-b pb-2">1. Escolha seu arroz</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {opcoes.arroz.map((item) => (
-                    <Card
-                      key={item}
-                      className={`cursor-pointer transition-all ${
-                        isItemSelected("arroz", item) ? "border-red-500 bg-red-50" : ""
-                      }`}
-                      onClick={() => handleSelectItem("arroz", item)}
-                    >
-                      <CardHeader className="p-3 sm:p-4">
-                        <CardTitle className="text-base flex justify-between items-center">
-                          <span className="mr-2">{item}</span>
-                          {isItemSelected("arroz", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
-                        </CardTitle>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+            <div className="space-y-8">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Monte seu Marmitex</CardTitle>
+                  <CardDescription>
+                    Selecione os ingredientes para o seu Marmitex{" "}
+                    {tamanhoFormatado[tamanho as keyof typeof tamanhoFormatado]} -{" "}
+                    {precos[tamanho as keyof typeof precos]}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {/* Seção Arroz */}
+                  <div>
+                    <Label htmlFor="arroz" className="text-base font-medium">
+                      1. Escolha seu arroz <span className="text-red-500">*</span>
+                    </Label>
+                    <Select value={selectedItems.arroz} onValueChange={(value) => handleSelectSingle("arroz", value)}>
+                      <SelectTrigger id="arroz" className="mt-2">
+                        <SelectValue placeholder="Selecione o arroz" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {opcoes.arroz.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Seção Feijão */}
-              <div ref={feijaoRef} className="scroll-mt-24">
-                <h2 className="mb-4 text-xl font-semibold border-b pb-2">2. Escolha seu feijão</h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {opcoes.feijao.map((item) => (
-                    <Card
-                      key={item}
-                      className={`cursor-pointer transition-all ${
-                        isItemSelected("feijao", item) ? "border-red-500 bg-red-50" : ""
-                      }`}
-                      onClick={() => handleSelectItem("feijao", item)}
-                    >
-                      <CardHeader className="p-3 sm:p-4">
-                        <CardTitle className="text-base flex justify-between items-center">
-                          <span className="mr-2">{item}</span>
-                          {isItemSelected("feijao", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
-                        </CardTitle>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+                  {/* Seção Feijão */}
+                  <div>
+                    <Label htmlFor="feijao" className="text-base font-medium">
+                      2. Escolha seu feijão <span className="text-red-500">*</span>
+                    </Label>
+                    <Select value={selectedItems.feijao} onValueChange={(value) => handleSelectSingle("feijao", value)}>
+                      <SelectTrigger id="feijao" className="mt-2">
+                        <SelectValue placeholder="Selecione o feijão" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {opcoes.feijao.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Seção Proteína */}
-              <div ref={proteinaRef} className="scroll-mt-24">
-                <h2 className="mb-4 text-xl font-semibold border-b pb-2">
-                  3. Escolha sua proteína
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">
-                    (Máximo: {limites[tamanho as keyof typeof limites].proteina})
-                  </span>
-                </h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {opcoes.proteina.map((item) => (
-                    <Card
-                      key={item}
-                      className={`cursor-pointer transition-all ${
-                        isItemSelected("proteina", item) ? "border-red-500 bg-red-50" : ""
-                      }`}
-                      onClick={() => handleSelectItem("proteina", item)}
+                  {/* Seção Proteína */}
+                  <div>
+                    <Label htmlFor="proteina" className="text-base font-medium">
+                      3. Escolha sua proteína <span className="text-red-500">*</span>
+                    </Label>
+                    <Select
+                      value={selectedItems.proteina}
+                      onValueChange={(value) => handleSelectSingle("proteina", value)}
                     >
-                      <CardHeader className="p-3 sm:p-4">
-                        <CardTitle className="text-base flex justify-between items-center">
-                          <span className="mr-2">{item}</span>
-                          {isItemSelected("proteina", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
-                        </CardTitle>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+                      <SelectTrigger id="proteina" className="mt-2">
+                        <SelectValue placeholder="Selecione a proteína" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {opcoes.proteina.map((item) => (
+                          <SelectItem key={item} value={item}>
+                            {item}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-              {/* Seção Acompanhamentos */}
-              <div ref={acompanhamentoRef} className="scroll-mt-24">
-                <h2 className="mb-4 text-xl font-semibold border-b pb-2">
-                  4. Escolha seus acompanhamentos
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">
-                    (Máximo: {limites[tamanho as keyof typeof limites].acompanhamento})
-                  </span>
-                </h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {opcoes.acompanhamento.map((item) => (
-                    <Card
-                      key={item}
-                      className={`cursor-pointer transition-all ${
-                        isItemSelected("acompanhamento", item) ? "border-red-500 bg-red-50" : ""
-                      }`}
-                      onClick={() => handleSelectItem("acompanhamento", item)}
-                    >
-                      <CardHeader className="p-3 sm:p-4">
-                        <CardTitle className="text-base flex justify-between items-center">
-                          <span className="mr-2">{item}</span>
-                          {isItemSelected("acompanhamento", item) && (
-                            <Check className="h-5 w-5 flex-shrink-0 text-red-600" />
-                          )}
-                        </CardTitle>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              </div>
+                  {/* Seção Acompanhamentos */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-medium">4. Escolha seus acompanhamentos</Label>
+                      <span className="text-sm text-muted-foreground">
+                        (Máximo: {limites[tamanho as keyof typeof limites].acompanhamento})
+                      </span>
+                    </div>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {opcoes.acompanhamento.map((item) => (
+                        <div key={item} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`acompanhamento-${item}`}
+                            checked={selectedItems.acompanhamento.includes(item)}
+                            onCheckedChange={() => handleToggleMultiple("acompanhamento", item)}
+                          />
+                          <Label htmlFor={`acompanhamento-${item}`} className="text-sm font-normal cursor-pointer">
+                            {item}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-              {/* Seção Saladas */}
-              <div ref={saladaRef} className="scroll-mt-24">
-                <h2 className="mb-4 text-xl font-semibold border-b pb-2">
-                  5. Escolha suas saladas
-                  <span className="ml-2 text-sm font-normal text-muted-foreground">
-                    (Máximo: {limites[tamanho as keyof typeof limites].salada})
-                  </span>
-                </h2>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                  {opcoes.salada.map((item) => (
-                    <Card
-                      key={item}
-                      className={`cursor-pointer transition-all ${
-                        isItemSelected("salada", item) ? "border-red-500 bg-red-50" : ""
-                      }`}
-                      onClick={() => handleSelectItem("salada", item)}
-                    >
-                      <CardHeader className="p-3 sm:p-4">
-                        <CardTitle className="text-base flex justify-between items-center">
-                          <span className="mr-2">{item}</span>
-                          {isItemSelected("salada", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
-                        </CardTitle>
-                      </CardHeader>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-
-              {/* Botão de finalização para mobile */}
-              {isMobile && (
-                <div className="mt-8">
-                  <Button className="w-full bg-red-600 hover:bg-red-700" size="lg" onClick={handleAddToCart}>
+                  {/* Seção Saladas */}
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <Label className="text-base font-medium">5. Escolha suas saladas</Label>
+                      <span className="text-sm text-muted-foreground">
+                        (Máximo: {limites[tamanho as keyof typeof limites].salada})
+                      </span>
+                    </div>
+                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                      {opcoes.salada.map((item) => (
+                        <div key={item} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`salada-${item}`}
+                            checked={selectedItems.salada.includes(item)}
+                            onCheckedChange={() => handleToggleMultiple("salada", item)}
+                          />
+                          <Label htmlFor={`salada-${item}`} className="text-sm font-normal cursor-pointer">
+                            {item}
+                          </Label>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button className="w-full bg-red-600 hover:bg-red-700" onClick={handleAddToCart}>
                     Adicionar ao Carrinho
                   </Button>
-                </div>
-              )}
+                </CardFooter>
+              </Card>
             </div>
 
             {/* Resumo do pedido */}
@@ -475,8 +344,8 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
         </div>
       </main>
 
-      {/* Resumo flutuante para mobile */}
-      {isMobile && showFloatingResume && (
+      {/* Botão flutuante para mobile */}
+      {isMobile && (
         <div className="fixed bottom-4 right-4 z-50">
           <Button className="bg-red-600 hover:bg-red-700 shadow-lg" size="lg" onClick={handleAddToCart}>
             Adicionar ao Carrinho
@@ -484,20 +353,8 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
         </div>
       )}
 
-      {/* Botão para voltar ao topo */}
-      {showScrollTop && (
-        <Button
-          variant="outline"
-          size="icon"
-          className="fixed bottom-4 left-4 z-50 rounded-full shadow-lg"
-          onClick={scrollToTop}
-        >
-          <ChevronUp className="h-5 w-5" />
-        </Button>
-      )}
-
       <footer className="border-t bg-red-50">
-        <div className="container flex flex-col gap-4 py-10 md:flex-row md:items-center md:justify-between md:py-12">
+        <div className="w-full px-2 sm:px-4 py-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between md:py-12 max-w-7xl mx-auto">
           <div className="flex flex-col gap-2">
             <Link href="/" className="flex items-center gap-2 text-lg font-bold text-red-600">
               <ShoppingBag className="h-5 w-5" />
