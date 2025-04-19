@@ -1,14 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+
+import { useState, useRef } from "react"
 import Link from "next/link"
-import { ArrowLeft, Check, ShoppingBag } from "lucide-react"
+import { ArrowLeft, Check, ShoppingBag, ChevronUp } from "lucide-react"
 import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useToast } from "@/hooks/use-toast"
 import { CartButton } from "@/components/cart-button"
 import { useCart } from "@/components/cart-provider"
@@ -20,6 +21,15 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
   const { toast } = useToast()
   const { addToCart } = useCart()
   const isMobile = useMobile()
+  const [showScrollTop, setShowScrollTop] = useState(false)
+  const [showFloatingResume, setShowFloatingResume] = useState(false)
+
+  // Refs para navegação de seções
+  const arrozRef = useRef<HTMLDivElement>(null)
+  const feijaoRef = useRef<HTMLDivElement>(null)
+  const proteinaRef = useRef<HTMLDivElement>(null)
+  const acompanhamentoRef = useRef<HTMLDivElement>(null)
+  const saladaRef = useRef<HTMLDivElement>(null)
 
   const [selectedItems, setSelectedItems] = useState({
     arroz: "",
@@ -53,6 +63,32 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
     proteina: ["Bife Acebolado", "Frango Grelhado", "Carne Moída", "Filé de Peixe", "Omelete"],
     acompanhamento: ["Batata Frita", "Purê de Batata", "Farofa", "Macarrão", "Legumes Refogados", "Banana Frita"],
     salada: ["Alface", "Tomate", "Cenoura Ralada", "Beterraba", "Repolho", "Pepino"],
+  }
+
+  // Controle de scroll
+  const handleScroll = () => {
+    if (window.scrollY > 300) {
+      setShowScrollTop(true)
+      setShowFloatingResume(true)
+    } else {
+      setShowScrollTop(false)
+      setShowFloatingResume(false)
+    }
+  }
+
+  // Adicionar evento de scroll
+  if (typeof window !== "undefined") {
+    window.addEventListener("scroll", handleScroll)
+  }
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" })
+  }
+
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: "smooth", block: "start" })
+    }
   }
 
   const handleSelectItem = (categoria: string, item: string) => {
@@ -121,6 +157,7 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
         description: "Por favor, selecione um tipo de arroz.",
         variant: "destructive",
       })
+      scrollToSection(arrozRef)
       return
     }
 
@@ -130,6 +167,7 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
         description: "Por favor, selecione um tipo de feijão.",
         variant: "destructive",
       })
+      scrollToSection(feijaoRef)
       return
     }
 
@@ -139,6 +177,7 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
         description: "Por favor, selecione pelo menos uma proteína.",
         variant: "destructive",
       })
+      scrollToSection(proteinaRef)
       return
     }
 
@@ -191,162 +230,199 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
             </h1>
           </div>
 
-          <div className="grid gap-6 lg:grid-cols-[1fr_300px]">
-            <div>
-              <Tabs defaultValue="arroz" className="w-full">
-                {isMobile ? (
-                  <div className="overflow-x-auto pb-2">
-                    <TabsList className="inline-flex w-auto">
-                      <TabsTrigger value="arroz" className="px-3">
-                        Arroz
-                      </TabsTrigger>
-                      <TabsTrigger value="feijao" className="px-3">
-                        Feijão
-                      </TabsTrigger>
-                      <TabsTrigger value="proteina" className="px-3">
-                        Proteínas
-                      </TabsTrigger>
-                      <TabsTrigger value="acompanhamento" className="px-3">
-                        Acompanhamentos
-                      </TabsTrigger>
-                      <TabsTrigger value="salada" className="px-3">
-                        Saladas
-                      </TabsTrigger>
-                    </TabsList>
-                  </div>
-                ) : (
-                  <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="arroz">Arroz</TabsTrigger>
-                    <TabsTrigger value="feijao">Feijão</TabsTrigger>
-                    <TabsTrigger value="proteina">Proteínas</TabsTrigger>
-                    <TabsTrigger value="acompanhamento">Acompanhamentos</TabsTrigger>
-                    <TabsTrigger value="salada">Saladas</TabsTrigger>
-                  </TabsList>
-                )}
+          {/* Navegação rápida */}
+          <div className="mb-8 overflow-x-auto">
+            <div className="flex space-x-2 pb-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => scrollToSection(arrozRef)}
+                className={selectedItems.arroz ? "border-green-500" : ""}
+              >
+                Arroz {selectedItems.arroz ? "✓" : ""}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => scrollToSection(feijaoRef)}
+                className={selectedItems.feijao ? "border-green-500" : ""}
+              >
+                Feijão {selectedItems.feijao ? "✓" : ""}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => scrollToSection(proteinaRef)}
+                className={selectedItems.proteina ? "border-green-500" : ""}
+              >
+                Proteínas {selectedItems.proteina ? "✓" : ""}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => scrollToSection(acompanhamentoRef)}
+                className={selectedItems.acompanhamento.length > 0 ? "border-green-500" : ""}
+              >
+                Acompanhamentos {selectedItems.acompanhamento.length > 0 ? "✓" : ""}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => scrollToSection(saladaRef)}
+                className={selectedItems.salada.length > 0 ? "border-green-500" : ""}
+              >
+                Saladas {selectedItems.salada.length > 0 ? "✓" : ""}
+              </Button>
+            </div>
+          </div>
 
-                <TabsContent value="arroz" className="mt-6">
-                  <h2 className="mb-4 text-xl font-semibold">Escolha seu arroz</h2>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {opcoes.arroz.map((item) => (
-                      <Card
-                        key={item}
-                        className={`cursor-pointer transition-all ${isItemSelected("arroz", item) ? "border-red-500 bg-red-50" : ""}`}
-                        onClick={() => handleSelectItem("arroz", item)}
-                      >
-                        <CardHeader className="p-3 sm:p-4">
-                          <CardTitle className="text-base flex justify-between items-center">
-                            <span className="mr-2">{item}</span>
-                            {isItemSelected("arroz", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
-                          </CardTitle>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
+          <div className="grid gap-8 lg:grid-cols-[1fr_300px]">
+            <div className="space-y-12">
+              {/* Seção Arroz */}
+              <div ref={arrozRef} className="scroll-mt-24">
+                <h2 className="mb-4 text-xl font-semibold border-b pb-2">1. Escolha seu arroz</h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {opcoes.arroz.map((item) => (
+                    <Card
+                      key={item}
+                      className={`cursor-pointer transition-all ${
+                        isItemSelected("arroz", item) ? "border-red-500 bg-red-50" : ""
+                      }`}
+                      onClick={() => handleSelectItem("arroz", item)}
+                    >
+                      <CardHeader className="p-3 sm:p-4">
+                        <CardTitle className="text-base flex justify-between items-center">
+                          <span className="mr-2">{item}</span>
+                          {isItemSelected("arroz", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              </div>
 
-                <TabsContent value="feijao" className="mt-6">
-                  <h2 className="mb-4 text-xl font-semibold">Escolha seu feijão</h2>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {opcoes.feijao.map((item) => (
-                      <Card
-                        key={item}
-                        className={`cursor-pointer transition-all ${isItemSelected("feijao", item) ? "border-red-500 bg-red-50" : ""}`}
-                        onClick={() => handleSelectItem("feijao", item)}
-                      >
-                        <CardHeader className="p-3 sm:p-4">
-                          <CardTitle className="text-base flex justify-between items-center">
-                            <span className="mr-2">{item}</span>
-                            {isItemSelected("feijao", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
-                          </CardTitle>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
+              {/* Seção Feijão */}
+              <div ref={feijaoRef} className="scroll-mt-24">
+                <h2 className="mb-4 text-xl font-semibold border-b pb-2">2. Escolha seu feijão</h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {opcoes.feijao.map((item) => (
+                    <Card
+                      key={item}
+                      className={`cursor-pointer transition-all ${
+                        isItemSelected("feijao", item) ? "border-red-500 bg-red-50" : ""
+                      }`}
+                      onClick={() => handleSelectItem("feijao", item)}
+                    >
+                      <CardHeader className="p-3 sm:p-4">
+                        <CardTitle className="text-base flex justify-between items-center">
+                          <span className="mr-2">{item}</span>
+                          {isItemSelected("feijao", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              </div>
 
-                <TabsContent value="proteina" className="mt-6">
-                  <h2 className="mb-4 text-xl font-semibold">
-                    Escolha sua proteína
-                    <span className="ml-2 text-sm font-normal text-muted-foreground">
-                      (Máximo: {limites[tamanho as keyof typeof limites].proteina})
-                    </span>
-                  </h2>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {opcoes.proteina.map((item) => (
-                      <Card
-                        key={item}
-                        className={`cursor-pointer transition-all ${isItemSelected("proteina", item) ? "border-red-500 bg-red-50" : ""}`}
-                        onClick={() => handleSelectItem("proteina", item)}
-                      >
-                        <CardHeader className="p-3 sm:p-4">
-                          <CardTitle className="text-base flex justify-between items-center">
-                            <span className="mr-2">{item}</span>
-                            {isItemSelected("proteina", item) && (
-                              <Check className="h-5 w-5 flex-shrink-0 text-red-600" />
-                            )}
-                          </CardTitle>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
+              {/* Seção Proteína */}
+              <div ref={proteinaRef} className="scroll-mt-24">
+                <h2 className="mb-4 text-xl font-semibold border-b pb-2">
+                  3. Escolha sua proteína
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    (Máximo: {limites[tamanho as keyof typeof limites].proteina})
+                  </span>
+                </h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {opcoes.proteina.map((item) => (
+                    <Card
+                      key={item}
+                      className={`cursor-pointer transition-all ${
+                        isItemSelected("proteina", item) ? "border-red-500 bg-red-50" : ""
+                      }`}
+                      onClick={() => handleSelectItem("proteina", item)}
+                    >
+                      <CardHeader className="p-3 sm:p-4">
+                        <CardTitle className="text-base flex justify-between items-center">
+                          <span className="mr-2">{item}</span>
+                          {isItemSelected("proteina", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              </div>
 
-                <TabsContent value="acompanhamento" className="mt-6">
-                  <h2 className="mb-4 text-xl font-semibold">
-                    Escolha seus acompanhamentos
-                    <span className="ml-2 text-sm font-normal text-muted-foreground">
-                      (Máximo: {limites[tamanho as keyof typeof limites].acompanhamento})
-                    </span>
-                  </h2>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {opcoes.acompanhamento.map((item) => (
-                      <Card
-                        key={item}
-                        className={`cursor-pointer transition-all ${isItemSelected("acompanhamento", item) ? "border-red-500 bg-red-50" : ""}`}
-                        onClick={() => handleSelectItem("acompanhamento", item)}
-                      >
-                        <CardHeader className="p-3 sm:p-4">
-                          <CardTitle className="text-base flex justify-between items-center">
-                            <span className="mr-2">{item}</span>
-                            {isItemSelected("acompanhamento", item) && (
-                              <Check className="h-5 w-5 flex-shrink-0 text-red-600" />
-                            )}
-                          </CardTitle>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
+              {/* Seção Acompanhamentos */}
+              <div ref={acompanhamentoRef} className="scroll-mt-24">
+                <h2 className="mb-4 text-xl font-semibold border-b pb-2">
+                  4. Escolha seus acompanhamentos
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    (Máximo: {limites[tamanho as keyof typeof limites].acompanhamento})
+                  </span>
+                </h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {opcoes.acompanhamento.map((item) => (
+                    <Card
+                      key={item}
+                      className={`cursor-pointer transition-all ${
+                        isItemSelected("acompanhamento", item) ? "border-red-500 bg-red-50" : ""
+                      }`}
+                      onClick={() => handleSelectItem("acompanhamento", item)}
+                    >
+                      <CardHeader className="p-3 sm:p-4">
+                        <CardTitle className="text-base flex justify-between items-center">
+                          <span className="mr-2">{item}</span>
+                          {isItemSelected("acompanhamento", item) && (
+                            <Check className="h-5 w-5 flex-shrink-0 text-red-600" />
+                          )}
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              </div>
 
-                <TabsContent value="salada" className="mt-6">
-                  <h2 className="mb-4 text-xl font-semibold">
-                    Escolha suas saladas
-                    <span className="ml-2 text-sm font-normal text-muted-foreground">
-                      (Máximo: {limites[tamanho as keyof typeof limites].salada})
-                    </span>
-                  </h2>
-                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                    {opcoes.salada.map((item) => (
-                      <Card
-                        key={item}
-                        className={`cursor-pointer transition-all ${isItemSelected("salada", item) ? "border-red-500 bg-red-50" : ""}`}
-                        onClick={() => handleSelectItem("salada", item)}
-                      >
-                        <CardHeader className="p-3 sm:p-4">
-                          <CardTitle className="text-base flex justify-between items-center">
-                            <span className="mr-2">{item}</span>
-                            {isItemSelected("salada", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
-                          </CardTitle>
-                        </CardHeader>
-                      </Card>
-                    ))}
-                  </div>
-                </TabsContent>
-              </Tabs>
+              {/* Seção Saladas */}
+              <div ref={saladaRef} className="scroll-mt-24">
+                <h2 className="mb-4 text-xl font-semibold border-b pb-2">
+                  5. Escolha suas saladas
+                  <span className="ml-2 text-sm font-normal text-muted-foreground">
+                    (Máximo: {limites[tamanho as keyof typeof limites].salada})
+                  </span>
+                </h2>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {opcoes.salada.map((item) => (
+                    <Card
+                      key={item}
+                      className={`cursor-pointer transition-all ${
+                        isItemSelected("salada", item) ? "border-red-500 bg-red-50" : ""
+                      }`}
+                      onClick={() => handleSelectItem("salada", item)}
+                    >
+                      <CardHeader className="p-3 sm:p-4">
+                        <CardTitle className="text-base flex justify-between items-center">
+                          <span className="mr-2">{item}</span>
+                          {isItemSelected("salada", item) && <Check className="h-5 w-5 flex-shrink-0 text-red-600" />}
+                        </CardTitle>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+
+              {/* Botão de finalização para mobile */}
+              {isMobile && (
+                <div className="mt-8">
+                  <Button className="w-full bg-red-600 hover:bg-red-700" size="lg" onClick={handleAddToCart}>
+                    Adicionar ao Carrinho
+                  </Button>
+                </div>
+              )}
             </div>
 
-            <div>
-              <Card className={`${isMobile ? "mt-6" : "sticky top-24"}`}>
+            {/* Resumo do pedido */}
+            <div className={isMobile ? "hidden lg:block" : ""}>
+              <Card className="sticky top-24">
                 <CardHeader>
                   <CardTitle>Resumo do Marmitex</CardTitle>
                   <CardDescription>
@@ -398,6 +474,28 @@ export default function MontarMarmitexPage({ params }: { params: { tamanho: stri
           </div>
         </div>
       </main>
+
+      {/* Resumo flutuante para mobile */}
+      {isMobile && showFloatingResume && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Button className="bg-red-600 hover:bg-red-700 shadow-lg" size="lg" onClick={handleAddToCart}>
+            Adicionar ao Carrinho
+          </Button>
+        </div>
+      )}
+
+      {/* Botão para voltar ao topo */}
+      {showScrollTop && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="fixed bottom-4 left-4 z-50 rounded-full shadow-lg"
+          onClick={scrollToTop}
+        >
+          <ChevronUp className="h-5 w-5" />
+        </Button>
+      )}
+
       <footer className="border-t bg-red-50">
         <div className="container flex flex-col gap-4 py-10 md:flex-row md:items-center md:justify-between md:py-12">
           <div className="flex flex-col gap-2">
